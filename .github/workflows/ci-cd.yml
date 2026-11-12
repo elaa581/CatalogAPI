@@ -1,34 +1,38 @@
 name: CI/CD Pipeline - ProductCatalog API
+
 on:
-push:
-branches: [ "main" ]
-pull_request:
-branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
 jobs:
-# ====================================================================
-# JOB 1 : Continuous Integration (Build & Unit Tests)
-# ====================================================================
-unit-tests:
-name: Build & Unit Tests
-runs-on: ubuntu-latest
-steps:
-# 1. Extraction du code source du dépôt
-- name: Checkout Repository
-uses: actions/checkout@v4
-# 2. Configuration du SDK .NET
-- name: Setup .NET SDK
-uses: actions/setup-dotnet@v4
-with:
-dotnet-version: '9.0.308' # A Adapter selon votre .csproj
-# 3. Restauration des dépendances NuGet de la solution
-- name: Restore dependencies
-run: dotnet restore src/ProductCatalog.Api/ProductCatalog.Api.csproj
-# 4. Compilation de la solution en mode Release sans re-restaurer
-- name: Build solution
-run: dotnet build src/ProductCatalog.Api/ProductCatalog.Api.csproj --
-configuration Release --no-restore
-- name: Run Unit Tests
-run: >
-dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
---filter "FullyQualifiedName~ProductUnitTests"
---configuration Release
+  # ====================================================================
+  # JOB 1 : Continuous Integration (Build & Unit Tests)
+  # ====================================================================
+  unit-tests:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Extraction du code source
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Configuration du SDK .NET
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # 3. Restauration des dépendances
+      - name: Restore dependencies
+        run: dotnet restore tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
+
+      # 4. Compilation en mode Release sans re-restaurer
+      - name: Build solution
+        run: dotnet build tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --configuration Release --no-restore
+
+      # 5. Tests unitaires (InMemory, sans SQL Server)
+      - name: Run Unit Tests
+        run: dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --filter "FullyQualifiedName~ProductUnitTests" --configuration Release --no-build
