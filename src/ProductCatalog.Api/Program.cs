@@ -75,3 +75,4 @@ app.MapGet("/api/get-product/{id:int}", async (int id, AppDbContext db) =>
 
 // 9. Démarrer l'application (toujours à la fin)
 app.Run();
+public partial class Program { }
