@@ -1,0 +1,46 @@
+
+name: CI/CD Pipeline - ProductCatalog API
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+
+  # ==========================================
+  # JOB 1 : Continuous Integration
+  # Build & Unit Tests
+  # ==========================================
+
+  unit-tests:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Step 1 : Récupérer le code source
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2 : Configurer le SDK .NET
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Step 3 : Restaurer les dépendances NuGet
+      - name: Restore Dependencies
+        run: dotnet restore src/ProductCatalog.Api/ProductCatalog.Api.csproj
+
+      # Step 4 : Compiler le projet
+      - name: Build Solution
+        run: dotnet build src/ProductCatalog.Api/ProductCatalog.Api.csproj --configuration Release --no-restore
+
+      # Step 5 : Exécuter les tests unitaires
+      - name: Run Unit Tests
+        run: dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --filter "FullyQualifiedName~ProductUnitTests" --configuration Release
