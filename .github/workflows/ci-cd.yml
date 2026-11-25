@@ -43,4 +43,4 @@ jobs:
 
       # Step 5 : Exécuter les tests unitaires
       - name: Run Unit Tests
-        run: dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --filter "FullyQualifiedName~ProductUnitTests" --configuration Release
+        run: dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --filter "FullyQualifiedName~ProductUnitTests" --configuration Release --logger "console;verbosity=detailed"
