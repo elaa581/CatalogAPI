@@ -124,5 +124,13 @@ jobs:
         with:
           name: integration-test-results
           path: ./TestResults/IntegrationTests/*.trx
+      
+      - name: Publish Test Summary
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: 'Report - Tests'
+          path: './TestResults/**/*.trx'
+          reporter: 'dotnet-trx'
 
 
