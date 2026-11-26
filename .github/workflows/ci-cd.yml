@@ -42,12 +42,15 @@ jobs:
         run: dotnet build src/ProductCatalog.Api/ProductCatalog.Api.csproj --configuration Release --no-restore
 
       # Step 5 : Exécuter les tests unitaires
+            # Step 5 : Exécuter les tests unitaires
       - name: Run Unit Tests
         run: >
           dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
           --filter "FullyQualifiedName~ProductUnitTests"
           --configuration Release
           --logger "console;verbosity=detailed"
+          --logger "trx;LogFileName=UnitResults.trx"
+          --results-directory ./TestResults/UnitTests
 
 
   # ==========================================
@@ -96,7 +99,7 @@ jobs:
       - name: Build Tests
         run: dotnet build tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --configuration Release --no-restore
 
-      # Step 5 : Exécuter les tests d'intégration
+            # Step 5 : Exécuter les tests d'intégration
       - name: Run Integration Tests
         env:
           ConnectionStrings__CatalogDbConnection: "Server=localhost,1433;Database=CatalogDB_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true"
@@ -105,5 +108,7 @@ jobs:
           --no-build
           --configuration Release
           --logger "console;verbosity=detailed"
+          --logger "trx;LogFileName=IntegrationResults.trx"
+          --results-directory ./TestResults/IntegrationTests
 
 
