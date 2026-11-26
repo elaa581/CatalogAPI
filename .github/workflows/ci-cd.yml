@@ -51,6 +51,13 @@ jobs:
           --logger "console;verbosity=detailed"
           --logger "trx;LogFileName=UnitResults.trx"
           --results-directory ./TestResults/UnitTests
+      # Step 6 : Sauvegarder le rapport des tests unitaires
+      - name: Upload Unit Tests Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: ./TestResults/UnitTests/*.trx
 
 
   # ==========================================
@@ -99,7 +106,7 @@ jobs:
       - name: Build Tests
         run: dotnet build tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --configuration Release --no-restore
 
-            # Step 5 : Exécuter les tests d'intégration
+      # Step 5 : Exécuter les tests d'intégration
       - name: Run Integration Tests
         env:
           ConnectionStrings__CatalogDbConnection: "Server=localhost,1433;Database=CatalogDB_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true"
@@ -110,5 +117,12 @@ jobs:
           --logger "console;verbosity=detailed"
           --logger "trx;LogFileName=IntegrationResults.trx"
           --results-directory ./TestResults/IntegrationTests
+    # Step 6 : Sauvegarder le rapport des tests d'intégration
+      - name: Upload Integration Tests TRX
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: ./TestResults/IntegrationTests/*.trx
 
 
