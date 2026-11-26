@@ -43,60 +43,67 @@ jobs:
 
       # Step 5 : Exécuter les tests unitaires
       - name: Run Unit Tests
-        run: dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --filter "FullyQualifiedName~ProductUnitTests" --configuration Release --logger "console;verbosity=detailed"
+        run: >
+          dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
+          --filter "FullyQualifiedName~ProductUnitTests"
+          --configuration Release
+          --logger "console;verbosity=detailed"
 
-# ==========================================================
-# JOB 2 : Tests d'Intégration avec SQL Server
-# ==========================================================
 
-integration-test:
-  name: Integration Tests (SQL Server)
-  runs-on: ubuntu-latest
+  # ==========================================
+  # JOB 2 : Tests d'Intégration avec SQL Server
+  # ==========================================
 
-  # Ce job s'exécute uniquement si le job unit-tests a réussi
-  needs: [unit-tests]
+  integration-test:
+    name: Integration Tests (SQL Server)
+    runs-on: ubuntu-latest
 
-  # Conteneur SQL Server utilisé uniquement pour ce job
-  services:
-    sqlserver:
-      image: mcr.microsoft.com/mssql/server:2022-latest
-      ports:
-        - 1433:1433
-      env:
-        ACCEPT_EULA: "Y"
-        MSSQL_SA_PASSWORD: "Password123!"
-      options: >-
-        --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password123!' -C -Q 'SELECT 1'"
-        --health-interval 15s
-        --health-timeout 5s
-        --health-retries 6
+    # Exécuter ce job uniquement si JOB 1 réussit
+    needs: [unit-tests]
 
-  steps:
-    # 1. Récupération du code source
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    # Conteneur Docker SQL Server
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+          - 1433:1433
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Password123!"
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password123!' -C -Q 'SELECT 1'"
+          --health-interval 15s
+          --health-timeout 5s
+          --health-retries 6
 
-    # 2. Installation du SDK .NET
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x' # À adapter selon le projet
+    steps:
 
-    # 3. Restauration des dépendances
-    - name: Restore dependencies
-      run: dotnet restore src/ProductCatalog.Api/ProductCatalog.Api.csproj
+      # Step 1 : Récupérer le code source
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # 4. Compilation du projet
-    - name: Build solution
-      run: dotnet build src/ProductCatalog.Api/ProductCatalog.Api.csproj --configuration Release --no-restore
+      # Step 2 : Configurer le SDK .NET
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
-    # 5. Exécution des tests d'intégration
-    - name: Run Integration Tests
-      env:
-        ConnectionStrings__CatalogDbConnection: "Server=localhost,1433;Database=CatalogDB_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true"
-      run: >
-        dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
-        --no-build
-        --configuration Release
-        --logger "console;verbosity=detailed"
+      # Step 3 : Restaurer les dépendances
+      - name: Restore Dependencies
+        run: dotnet restore tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
+
+      # Step 4 : Compiler le projet de tests
+      - name: Build Tests
+        run: dotnet build tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj --configuration Release --no-restore
+
+      # Step 5 : Exécuter les tests d'intégration
+      - name: Run Integration Tests
+        env:
+          ConnectionStrings__CatalogDbConnection: "Server=localhost,1433;Database=CatalogDB_Test;User Id=sa;Password=Password123!;TrustServerCertificate=True;MultipleActiveResultSets=true"
+        run: >
+          dotnet test tests/ProductCatalog.Tests/ProductCatalog.Tests.csproj
+          --no-build
+          --configuration Release
+          --logger "console;verbosity=detailed"
+
 
