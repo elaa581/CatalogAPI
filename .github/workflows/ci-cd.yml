@@ -133,4 +133,57 @@ jobs:
           path: './TestResults/**/*.trx'
           reporter: 'dotnet-trx'
 
+  # ====================================================================
+  # JOB 3 : Continuous Delivery (Docker Build & Push vers Docker Hub)
+  # ====================================================================
+
+  build-and-push-docker:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+
+    # Exécuter uniquement sur un push vers la branche main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    # Ce job attend la réussite des tests d'intégration
+    needs: [integration-test]
+
+    steps:
+
+      # Step 1 : Récupérer le code source
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      # Step 2 : Configurer Docker Buildx
+      - name: Configurer Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3 : Connexion à Docker Hub
+      - name: Connexion au registre Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 4 : Extraire les métadonnées (Tags et Labels)
+      - name: Extraire les métadonnées (Tags et Labels sémantiques)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/productcatalog-api
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+            type=ref,event=branch
+
+      # Step 5 : Construire et publier l'image Docker
+      - name: Construire et publier l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+
 
